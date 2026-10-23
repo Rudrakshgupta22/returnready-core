@@ -1,0 +1,14 @@
+{
+  "card_type": "triage_or_return",
+  "title": "Eligible for Instant Refund (18 Days Left)",
+  "data": {
+    "found": true,
+    "order_id": "ORD-901",
+    "product_name": "SoundPulse Pro Headphones",
+    "days_since_purchase": 12,
+    "status": "RETURN_ELIGIBLE",
+    "headline": "Eligible for Instant Refund (18 Days Left)",
+    "reason": "Purchased 12 days ago (2026-10-10), inside the 30-day return window.",
+    "next_step": "One-tap prepaid QR drop-off code sent to mobile."
+  }
+}

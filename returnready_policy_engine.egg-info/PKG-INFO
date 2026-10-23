@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: returnready-policy-engine
+Version: 0.1.0
+Summary: Deterministic e-commerce return, warranty, and hardware diagnostic triage engine.
+Author: ReturnReady Team
+License: MIT
+Project-URL: Homepage, https://github.com/your-username/returnready-policy-engine
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Dynamic: license-file

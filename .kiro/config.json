@@ -1,0 +1,11 @@
+{
+  "name": "returnready",
+  "version": "0.1.0",
+  "mcp_servers": {
+    "returnready-mcp": {
+      "url": "http://127.0.0.1:8001/mcp",
+      "transport": "streamable-http"
+    }
+  },
+  "skills": ["skills/returnready/SKILL.md"]
+}

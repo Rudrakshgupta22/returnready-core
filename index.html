@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReturnReady - Alexa+ Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4B5563; border-radius: 4px; }
+        .phone-frame { box-shadow: 0 0 0 12px #1f2937, 0 0 0 14px #374151; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen overflow-hidden flex flex-col md:flex-row font-sans">
+
+    <!-- LEFT PANEL: Alexa+ Web Simulator -->
+    <div class="flex-1 flex flex-col relative border-r border-gray-700">
+        
+        <!-- Dynamic Telemetry Header (Proves MCP Spec & Transport Live!) -->
+        <div class="bg-gray-800 p-3 text-xs flex flex-wrap gap-2 justify-center border-b border-gray-700" id="telemetry-bar">
+            <span id="badge-spec" class="bg-blue-900 text-blue-200 px-2 py-1 rounded">MCP Spec: Waiting...</span>
+            <span id="badge-transport" class="bg-purple-900 text-purple-200 px-2 py-1 rounded">Transport: Waiting...</span>
+            <span id="badge-skill" class="bg-emerald-900 text-emerald-200 px-2 py-1 rounded">Skill: skills/returnready/SKILL.md</span>
+            <span id="badge-engine" class="bg-orange-900 text-orange-200 px-2 py-1 rounded">Engine: Local Orchestrator</span>
+        </div>
+
+        <!-- Chat History -->
+        <div id="chat-history" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <div class="flex gap-4 items-start">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold">A+</div>
+                <div class="bg-gray-800 p-4 rounded-xl rounded-tl-none max-w-[80%]">
+                    <p>Hi, I'm ReturnReady. You can ask me for buying advice or get help with a return or broken item.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area & Quick Demo Buttons -->
+        <div class="p-4 bg-gray-800 border-t border-gray-700">
+            <div class="flex gap-2 mb-3 overflow-x-auto pb-1">
+                <button onclick="sendChat('I need headphones for the gym. Is SoundPulse Pro good?')" class="whitespace-nowrap text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-full border border-gray-600">1. Pre-Purchase Risk Check</button>
+                <button onclick="sendChat('My 45-day-old AeroBuds left earbud stopped charging.')" class="whitespace-nowrap text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-full border border-gray-600">2. Voice Hardware Triage</button>
+                <button onclick="triggerVision()" class="whitespace-nowrap text-xs bg-indigo-700 hover:bg-indigo-600 px-3 py-1 rounded-full border border-indigo-500">3. Simulated Vision (AWS Pending)</button>
+            </div>
+
+            <form id="chat-form" class="flex gap-2">
+                <button type="button" id="mic-btn" class="p-3 bg-gray-700 rounded-full hover:bg-red-500 transition-colors" title="Hold to speak">🎤</button>
+                <input type="text" id="user-input" class="flex-1 bg-gray-900 border border-gray-600 rounded-full px-4 focus:outline-none focus:border-blue-500" placeholder="Type or speak to Alexa+..." autocomplete="off">
+                <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full font-semibold transition-colors">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: Mobile Companion View -->
+    <div class="w-full md:w-[450px] bg-black flex items-center justify-center p-6">
+        <div class="phone-frame w-[360px] h-[720px] bg-white text-gray-900 rounded-[3rem] overflow-hidden flex flex-col relative">
+            <div class="bg-gray-100 p-4 border-b text-center font-bold text-lg pt-8">
+                Companion App
+            </div>
+            <div id="mobile-content" class="p-4 flex-1 overflow-y-auto bg-gray-50 flex flex-col gap-4">
+                <div class="text-center text-gray-400 mt-20">
+                    <p class="text-4xl mb-4">📱</p>
+                    <p>Awaiting data from Alexa+...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const chatForm = document.getElementById('chat-form');
+        const mobileContent = document.getElementById('mobile-content');
+
+        mobileContent.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-ship-order]');
+            if (button) shipReplacement(button.dataset.orderId, button.dataset.token);
+        });
+
+        // Security Helper: Prevents XSS when rendering JSON data
+        function escapeHTML(str) {
+            if (!str) return "";
+            return String(str).replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag]));
+        }
+
+        function updateTelemetry(data) {
+            if(data.mcp_protocol_version) document.getElementById('badge-spec').innerText = `MCP Spec: ${data.mcp_protocol_version}`;
+            if(data.transport) document.getElementById('badge-transport').innerText = `Transport: ${data.transport}`;
+            if(data.aws_engine) document.getElementById('badge-engine').innerText = `Engine: ${data.aws_engine}`;
+        }
+
+        function speakText(text) {
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.05; 
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function appendMessage(role, text) {
+            const isUser = role === 'user';
+            const html = `
+                <div class="flex gap-4 items-start ${isUser ? 'flex-row-reverse' : ''}">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${isUser ? 'bg-gray-600' : 'bg-blue-500'}">
+                        ${isUser ? 'U' : 'A+'}
+                    </div>
+                    <div class="p-4 rounded-xl max-w-[80%] text-sm ${isUser ? 'bg-blue-900 rounded-tr-none' : 'bg-gray-800 rounded-tl-none'}">
+                        <p>${escapeHTML(text)}</p>
+                    </div>
+                </div>
+            `;
+            chatHistory.insertAdjacentHTML('beforeend', html);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        async function sendChat(message) {
+            if (!message.trim()) return;
+            appendMessage('user', message);
+            userInput.value = '';
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await res.json();
+                appendMessage('assistant', data.reply);
+                speakText(data.reply);
+                updateTelemetry(data);
+            } catch (err) {
+                appendMessage('assistant', 'Error connecting to the orchestrator.');
+            }
+        }
+
+        chatForm.onsubmit = (e) => {
+            e.preventDefault();
+            sendChat(userInput.value);
+        };
+
+        async function triggerVision() {
+            appendMessage('user', '[Uploaded image of broken charging pin on AeroBuds]');
+            try {
+                const res = await fetch('/api/vision-verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+                const data = await res.json();
+                appendMessage('assistant', data.reply);
+                speakText(data.reply);
+            } catch (err) { console.error(err); }
+        }
+
+        // Feature Upgrade: Ship Replacement Button action
+        async function shipReplacement(orderId, token) {
+            if (!orderId || !token) return;
+            try {
+                await fetch('/api/ship-replacement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order_id: orderId, token: token })
+                });
+                // The polling mechanism will automatically catch the state update!
+            } catch (err) { console.error(err); }
+        }
+
+        // Mobile Screen Polling
+        let lastMobileStateStr = "";
+        setInterval(async () => {
+            try {
+                const res = await fetch('/api/mobile-state');
+                const state = await res.json();
+                const stateStr = JSON.stringify(state);
+                
+                if (stateStr !== lastMobileStateStr && state.card_type !== "empty") {
+                    lastMobileStateStr = stateStr;
+                    renderMobileCard(state);
+                }
+            } catch (err) {}
+        }, 1500); 
+
+        function renderMobileCard(state) {
+            const d = state.data;
+            let html = ``;
+
+            if (state.card_type === 'product_comparison') {
+                const p = d.product;
+                const risk = d.matched_return_risk;
+                const isHighRisk = risk.risk.includes("HIGH");
+                
+                html = `
+                    <div class="bg-white rounded-xl shadow p-4 border border-gray-200">
+                        <img src="https://placehold.co/300x200?text=${escapeHTML(p.name)}" class="rounded-lg mb-3 w-full">
+                        <h2 class="font-bold text-xl">${escapeHTML(p.name)}</h2>
+                        <p class="text-blue-600 font-bold mb-3">$${escapeHTML(p.price)}</p>
+                        
+                        <div class="p-3 rounded-lg mb-3 ${isHighRisk ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border">
+                            <p class="font-bold text-sm uppercase">Return Risk: ${escapeHTML(risk.risk)}</p>
+                            <p class="text-xs mt-1">${escapeHTML(risk.reason)}</p>
+                        </div>
+                        
+                        <div class="text-sm space-y-2">
+                            <p><strong>Battery:</strong> ${escapeHTML(p.specs.battery_life)}</p>
+                            <p><strong>Water Resistance:</strong> ${escapeHTML(p.specs.water_resistance || 'None')}</p>
+                        </div>
+                    </div>
+                `;
+            } 
+            else if (state.card_type === 'triage_or_return' || state.card_type === 'warranty_verified') {
+                const isVerified = state.card_type === 'warranty_verified';
+                const isShipped = state.title === 'Replacement Shipped!';
+                
+                html = `
+                    <div class="bg-white rounded-xl shadow overflow-hidden border border-gray-200">
+                        <div class="${isVerified ? (isShipped ? 'bg-blue-600' : 'bg-green-600') : 'bg-orange-500'} text-white p-4">
+                            <h2 class="font-bold text-lg">${escapeHTML(state.title)}</h2>
+                            ${d.order_id ? `<p class="text-sm opacity-90">Order: ${escapeHTML(d.order_id)}</p>` : ''}
+                        </div>
+                        <div class="p-4">
+                            <p class="text-sm text-gray-700 mb-4">${escapeHTML(d.reason)}</p>
+                            
+                            ${isVerified ? `
+                                <div class="bg-gray-100 p-3 rounded text-center mb-4 border border-dashed border-gray-400">
+                                    <p class="text-xs text-gray-500 uppercase tracking-wide">Approved Claim Token</p>
+                                    <p class="font-mono font-bold text-lg tracking-widest ${isShipped ? 'text-blue-700 line-through' : 'text-green-700'}">${escapeHTML(d.verification_token)}</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${d.diagnostic_instruction ? `
+                                <div class="bg-orange-50 text-orange-800 p-3 rounded mb-4 text-sm border border-orange-200">
+                                    <strong>Try this now:</strong><br>${escapeHTML(d.diagnostic_instruction)}
+                                </div>
+                            ` : ''}
+
+                            ${isVerified && !isShipped ? `
+                                <button data-ship-order data-order-id="${escapeHTML(d.order_id)}" data-token="${escapeHTML(d.verification_token)}" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-colors">
+                                    Ship Free Replacement
+                                </button>
+                            ` : ''}
+                            
+                            ${!isVerified ? `
+                                <button class="w-full bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-lg font-bold transition-colors">
+                                    View Support Options
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            mobileContent.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

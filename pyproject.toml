@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "returnready-policy-engine"
+version = "0.1.0"
+description = "Deterministic e-commerce return, warranty, and hardware diagnostic triage engine."
+authors = [{ name = "ReturnReady Team" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["mcp[cli]<2", "fastapi", "uvicorn", "pydantic", "python-dotenv", "pytest"]
+
+[project.urls]
+"Homepage" = "https://github.com/your-username/returnready-policy-engine"

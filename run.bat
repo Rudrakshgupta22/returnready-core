@@ -1,0 +1,6 @@
+@echo off
+echo Starting ReturnReady MCP Server...
+start cmd /k "python mcp_server.py"
+
+echo Starting ReturnReady Web App...
+start cmd /k "uvicorn app:app --port 8000 --reload"

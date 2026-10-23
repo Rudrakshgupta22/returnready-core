@@ -1,0 +1,106 @@
+{
+  "policies": {
+    "standard_return_days": 30,
+    "defect_warranty_days": 365
+  },
+  "products": [
+    {
+      "id": "prod_101",
+      "name": "SoundPulse Pro Headphones",
+      "category": "Audio",
+      "price": 249.99,
+      "rating": 4.7,
+      "return_rate_overall": "8%",
+      "return_risk_by_use_case": {
+        "flights_and_travel": { "risk": "LOW (3%)", "reason": "Top-rated cabin ANC and 40h battery." },
+        "gym_and_running": { "risk": "HIGH (38%)", "reason": "No sweat resistance; heavy earcups slip during workouts." }
+      },
+      "specs": {
+        "battery_life": "40 hours (ANC on)",
+        "weight": "254g",
+        "water_resistance": "None (Indoor/Travel only)",
+        "connectivity": "Bluetooth 5.4, Multipoint"
+      },
+      "pros": [
+        "Class-leading cabin noise cancellation for flights",
+        "Plush memory foam earcups for all-day comfort"
+      ],
+      "cons": [
+        "High return rate when bought for gym/sweaty workouts",
+        "Bulky carrying case"
+      ],
+      "diagnostic_step": "Hold Power + Volume Down for 5 seconds. If the LED flashes red 3 times, the battery controller is faulted.",
+      "product_url": "https://example.com/products/soundpulse-pro"
+    },
+    {
+      "id": "prod_102",
+      "name": "AeroBuds Mini",
+      "category": "Audio",
+      "price": 129.00,
+      "rating": 4.3,
+      "return_rate_overall": "11%",
+      "return_risk_by_use_case": {
+        "flights_and_travel": { "risk": "MEDIUM (22%)", "reason": "Lighter ANC struggles with loud jet engine hum." },
+        "gym_and_running": { "risk": "LOW (4%)", "reason": "IPX5 sweatproof with locked-in wingtips." }
+      },
+      "specs": {
+        "battery_life": "8 hours buds / 24 hours case",
+        "weight": "4.8g per earbud",
+        "water_resistance": "IPX5 Sweat & Splash Proof",
+        "charging": "USB-C & Qi Wireless"
+      },
+      "pros": [
+        "Zero-slip wingtip fit for running and gym",
+        "Pocket-sized wireless charging case"
+      ],
+      "cons": [
+        "Average noise cancellation on airplanes"
+      ],
+      "diagnostic_step": "Place both buds in the case and hold the back sync button for 5 seconds. If the left LED stays dark instead of blinking amber, the charging contact cell is dead.",
+      "product_url": "https://example.com/products/aerobuds-mini"
+    },
+    {
+      "id": "prod_103",
+      "name": "BrewMaster Nano Espresso",
+      "category": "Kitchen",
+      "price": 189.50,
+      "rating": 4.6,
+      "return_rate_overall": "6%",
+      "return_risk_by_use_case": {
+        "flights_and_travel": { "risk": "LOW (5%)", "reason": "Compact for studio apartments and dorms." },
+        "gym_and_running": { "risk": "LOW (5%)", "reason": "Fast 25-second morning espresso shot." }
+      },
+      "specs": {
+        "battery_life": "AC Powered (15 Bar Pump)",
+        "weight": "2.8kg",
+        "water_resistance": "Removable 1.2L Tank",
+        "connectivity": "Manual One-Touch Brew"
+      },
+      "pros": [
+        "Ultra-compact footprint for small kitchens",
+        "Consistent crema with ground coffee and pods"
+      ],
+      "cons": [
+        "Small drip tray requires frequent emptying"
+      ],
+      "diagnostic_step": "Hold the Brew and Steam buttons together for 5 seconds to reset the pressure valve.",
+      "product_url": "https://example.com/products/brewmaster-nano"
+    }
+  ],
+  "orders": [
+    {
+      "order_id": "ORD-901",
+      "product_id": "prod_101",
+      "product_name": "SoundPulse Pro Headphones",
+      "days_since_purchase": 12,
+      "price_paid": 249.99
+    },
+    {
+      "order_id": "ORD-902",
+      "product_id": "prod_102",
+      "product_name": "AeroBuds Mini",
+      "days_since_purchase": 45,
+      "price_paid": 129.00
+    }
+  ]
+}
