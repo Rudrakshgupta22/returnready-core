@@ -1,4 +1,5 @@
-<div align="center">
+
+
 
 # 📦 ReturnReady
 
@@ -248,10 +249,5 @@ Released under the **MIT License**. See [`LICENSE`](LICENSE).
 
 ---
 
-<div align="center">
-
 **ReturnReady: Alexa+ speaks the verdict. Your phone shows the proof.**
 
-</div>
-#   r e t u r n r e a d y - c o r e  
- 
